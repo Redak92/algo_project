@@ -1,8 +1,18 @@
 import random
+import numpy as np
 
-def create_backbone():
-    dictio = {'T1-' + str(i + 1): {} for i in range(10)}
-    for key, value in dictio.items():
-        for node in dictio.keys():
-            if node != key and random.random() >= 7.5:
-                
+
+def create_backbone(nodes_numbers: int) -> np.array:
+    tab = np.full((nodes_numbers, nodes_numbers), -1)
+    for i in range(nodes_numbers):
+        for j in range(i + 1, nodes_numbers):
+            if random.random() < 0.75:
+                a = random.randint(5, 10)
+                tab[i][j] = a
+                tab[j][i] = a
+
+    return tab
+ 
+
+print(create_backbone(5))
+
