@@ -28,10 +28,10 @@ class Sommets(object):
         self.precedent = None
 
 class Aretes(object):
-    def __init__(self, depart, arrivee, temps, name, Gold):
+    def __init__(self, depart, arrivee, cout, name, Gold):
         self.depart = depart
         self.arrivee = arrivee
-        self.temps = temps
+        self.cout = cout
         self.name = name
         self.GolDRoger = Gold
 
@@ -67,28 +67,28 @@ class Graph(object):
         """
         # Initialisation
         for sommet in self.sommets:
-            sommet.temps = float('inf')
+            sommet.cout = float('inf')
             sommet.precedent = None
 
         chemin_arete = []
-        depart.temps = 0
+        depart.cout = 0
 
         # Algorithme de Dijkstra
         sommets_non_traites = list(self.sommets)
         while sommets_non_traites:
-            sommet_courant = min(sommets_non_traites, key=lambda s: s.temps)
+            sommet_courant = min(sommets_non_traites, key=lambda s: s.cout)
             if sommet_courant == arrivee:
                 break
             sommets_non_traites.remove(sommet_courant)
             for arete in self.arretes:
                 if arete.depart == sommet_courant:
-                    temps = sommet_courant.temps + arete.temps[niveau]
-                    if temps < arete.arrivee.temps:
+                    cout = sommet_courant.cout + arete.cout[niveau]
+                    if cout < arete.arrivee.cout:
                         if len(chemin_arete):
                             for item in chemin_arete:
                                 if item.arrivee == arete.arrivee:
                                     chemin_arete.remove(item)
-                        arete.arrivee.temps = temps
+                        arete.arrivee.cout = cout
                         arete.arrivee.precedent = sommet_courant
                         chemin_arete.append(arete)
 
@@ -110,8 +110,8 @@ class Graph(object):
         # Retour du résultat
         return chemin, arrivee.temps
 
-    def afficher_chemin(self, chemin, temps):
-        print(f'le chemin le plus rapide prend {temps} secondes')
+    def afficher_chemin(self, chemin, cout):
+        print(f'le chemin le plus court à un cout de {cout}')
         print(f'On commence par partir de {chemin[0]}.name')
         counter = 0
         for i in range(1, len(chemin)-1, 2):
