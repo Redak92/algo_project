@@ -4,6 +4,12 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 
+# la classe Network permet de créer un réseau de n noeuds
+# elle prend en paramètre n, t1_range, t2_range, t3_range
+# n est le nombre de noeuds
+# t1_range est le noeud de fin (non inclus) du tier 1
+# t2_range est le noeud de fin (non inclus) du tier 2
+# t3_range est le noeud de fin (non inclus) du tier 3
 class Network:
     def __init__(self, n, t1_range, t2_range, t3_range):
         self.n = n
@@ -14,6 +20,7 @@ class Network:
         self.build_network()
         self.distances, self.routing_table = self.floyd_warshall()
 
+    # la fonction dfs_recursive permet de parcourir le graphe en profondeur
     def dfs_recursive(self, node, visited, cpt):
         visited[node] = True
         cpt += 1
@@ -22,12 +29,16 @@ class Network:
                 cpt = self.dfs_recursive(i, visited, cpt)
         return cpt
 
+    # la fonction is_connex permet de vérifier si le graphe est connexe
+    # grace à la fonction dfs_recursive (parcours en profondeur)
+    # si le nombre de noeuds visités est égal au nombre de noeuds du graphe alors le graphe est connexe
     def is_connex(self):
         node = 0
         visited = [False] * self.n
         cpt = 0
         return self.dfs_recursive(node, visited, cpt) == self.n
 
+    # la fonction count_links permet de compter le degré d'un sommet
     def count_links(self, line, starting_column=0):
         cpt = 0
         for i in range(starting_column, self.n):
@@ -35,6 +46,8 @@ class Network:
                 cpt += 1
         return cpt
 
+    # la fonction change_tier1 permet de lier les noeuds du tier 1 entre eux
+    # elle remplit la matrice avec les distances entre les nœuds correspondants
     def change_tier1(self, x):
         for y in range(x + 1, self.t1_range):
             if random.random() < 0.75:
@@ -42,41 +55,49 @@ class Network:
                 self.matrix[y][x] = link_value
                 self.matrix[x][y] = link_value
 
+    # fonction qui permet de lier les noeuds du tier 2 au backbone
     def change_tier2_to_backbone(self, x):
         backbone_nodes = random.sample(range(self.t1_range), random.randint(1, 2))
         for y in backbone_nodes:
-            rd_nb = random.randint(10, 20)
-            self.matrix[x][y] = rd_nb
-            self.matrix[y][x] = rd_nb
+            link_value = random.randint(10, 20)
+            self.matrix[x][y] = link_value
+            self.matrix[y][x] = link_value
 
+    # la fonction change_tier2 permet de lier les noeuds du tier 2 entre eux
+    # elle fait en sorte que les degrés des sommets soient considérés comme valide (soit 2 soit 3) 
     def change_tier2(self):
+        # on initialise une matrice de tous les degrés des noeuds
         degree_list = [[i, 0] for i in range(self.t1_range, self.t2_range)]
         random.shuffle(degree_list)
         while True:
+            # tant que le premier élement n'est pas de degré 2 ou plus
             if degree_list[0][1] >= 2:
                 break
             else:
                 for i in range(1, len(degree_list)):
                     if self.matrix[degree_list[i][0]][degree_list[0][0]] == float('inf'):
-                        # Updating matrix
+                        # on update la matrice
                         rd_nbr = random.randint(10, 20)
                         self.matrix[degree_list[i][0]][degree_list[0][0]] = rd_nbr
                         self.matrix[degree_list[0][0]][degree_list[i][0]] = rd_nbr
-                        # Updating degrees
+                        # et on update les degrés 
                         degree_list[0][1] += 1
                         degree_list[i][1] += 1
                         break
-
+            
+            # on trie la liste afin de voir si le degré minimal est au moins 2
             degree_list = sorted(degree_list, key=lambda x: x[1])
 
+    # la fonction change_tier3 permet de lier les noeuds du tier 3 entre eux
     def change_tier3(self):
         for x in range(self.t2_range, self.t3_range):
             t2_nodes = random.sample(range(self.t1_range, self.t2_range), 2)
             for y in t2_nodes:
-                rd_nbr = random.randint(20, 50)
-                self.matrix[x][y] = rd_nbr
-                self.matrix[y][x] = rd_nbr
+                link_value = random.randint(20, 50)
+                self.matrix[x][y] = link_value
+                self.matrix[y][x] = link_value
 
+    # la fonction build_network utilise les fonctions implémentées au dessus afin de construire le réseau integralement
     def build_network(self):
         for x in range(self.t1_range):
             self.change_tier1(x)
@@ -85,22 +106,21 @@ class Network:
         self.change_tier2()
         self.change_tier3()
 
-    def get_distances(self):
-        distance = list(self.matrix.copy())
-        for k in range(self.n):
-            for i in range(self.n):
-                for j in range(self.n):
-                    distance[i][j] = min(distance[i][j], distance[i][k] + distance[k][j])
-        return distance
-
+    # la fonction floyd_warshall permet de construire la table de routage grace à l'algorithme de floyd-warshall
     def floyd_warshall(self):
-
+        # on crée une copie de la matrice
         dist = [[self.matrix[i][j] for j in range(self.n)] for i in range(self.n)]
+
+        # on crée une table de routage en remplacant les float inf par -1
         routing_table = [[j if self.matrix[i][j] != float('inf') else -1 for j in range(self.n)] for i in range(self.n)]
         for i in range(self.n):
+            # la diagonale contiendra des zéros car la distance entre un noeud et lui même est 0
             dist[i][i] = 0
+            # dans la diagonale de la table de routage contiendra la valeur de sa colonne/ligne
             routing_table[i][i] = i
 
+        # on utilise l'algorithme de floyd-warshall pour construire la table de routage
+        # on cherche le plus court chemin de chaque noeud vers tous les noeuds 
         for k in range(self.n):
             for i in range(self.n):
                 for j in range(self.n):
@@ -110,6 +130,8 @@ class Network:
 
         return dist, routing_table
 
+
+    # la fonction get_full_path utilise la table de routage pour determiner le plus court chemin entre les noeuds start et end
     def get_full_path(self, start, end):
         if self.routing_table[start][end] == -1:
             return []
@@ -125,6 +147,7 @@ class Network:
 
         return path
 
+    # cette fonction permet de visualiser le graphe grace à networkx et matplotlib
     def show_graph(self):
         g = nx.Graph()
         for i in range(self.n):
