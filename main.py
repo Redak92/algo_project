@@ -57,6 +57,7 @@ class Network:
 
     # fonction qui permet de lier les noeuds du tier 2 au backbone
     def change_tier2_to_backbone(self, x):
+        # on prend un ou deux noeud de la liste de noeuds du backbone
         backbone_nodes = random.sample(range(self.t1_range), random.randint(1, 2))
         for y in backbone_nodes:
             link_value = random.randint(10, 20)
@@ -91,6 +92,7 @@ class Network:
     # la fonction change_tier3 permet de lier les noeuds du tier 3 entre eux
     def change_tier3(self):
         for x in range(self.t2_range, self.t3_range):
+            # on pioche 2 noeuds du tier 2
             t2_nodes = random.sample(range(self.t1_range, self.t2_range), 2)
             for y in t2_nodes:
                 link_value = random.randint(20, 50)
